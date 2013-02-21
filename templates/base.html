@@ -1,0 +1,88 @@
+<table style="width:100%; height:100%;" border="5">
+  <tr>
+    <td>
+      <div id="${page}_toolbar" dojoType="dijit.Toolbar">
+         <button dojoType="dijit.form.Button" id="${page}_new" onclick="new${page}()" iconClass="dijitEditorIcon dijitEditorIconCopy" showLabel="true"> New </button>
+         <button dojoType="dijit.form.Button" id="${page}_update" onclick="save${page}()" iconClass="dijitEditorIcon dijitEditorIconSave" showLabel="true"> Save </button>
+         <button dojoType="dijit.form.Button"> <img src="/static/resources/images/drive-harddisk.png" height="20px"/>
+           Save To File
+           <script type="dojo/method" event="onClick" args="evt">
+             var ${page}Id = dijit.byId("${page}_Id").getValue();
+
+             if (${page}Id.toString() == "NaN")
+             {
+               dojo.byId("InformationMessage").innerHTML = "You can only save to file a viewable ${page}";
+               dijit.byId("InformationMessageDialog").show();
+               return;
+             }
+
+             dojo.byId("SaveDialogURL").innerHTML = "${page}Manager";
+             dijit.byId("SaveDialog").show();
+           </script>
+         </button>
+         <button dojoType="dijit.form.Button" id="${page}_delete" iconClass="dijitEditorIcon dijitEditorIconDelete" showLabel="true">
+           Delete
+           <script type="dojo/method" event="onClick" args="evt">
+             var ${page}Id = dijit.byId("${page}_Id").getValue();
+         
+             if (${page}Id.toString() == "NaN")
+             {
+                 dojo.byId("InformationMessage").innerHTML = "You can only delete a viewable ${page}";
+                 dijit.byId("InformationMessageDialog").show();
+                 return;
+             }
+         
+             var ${page}Status = dojo.byId("${page}Status").innerHTML;
+         
+             if (${page}Status.toString() !== "PENDING")
+             {
+               var message = dojo.byId("InformationMessage");
+               message.innerHTML = "You cannot edit a purchase order for which at least one Goods Received Note has already been received";
+               dijit.byId("InformationMessageDialog").show();
+         
+               return;
+             }//ENd of if statement block
+         
+             dijit.byId("${page}DeleteDialog").show();
+           </script>
+         </button>
+         <button dojoType="dijit.form.Button" id="${page}_print"> <img src="/static/resources/images/printer.png" width="16" height="16"/>
+           Print Preview
+           <script type="dojo/method" event="onClick" args="evt">
+             var ${page}_id = dijit.byId("${page}_id").getValue();
+         
+             if (${page}_id.toString() == "NaN")
+             {
+               dojo.byId("InformationMessage").innerHTML = "You can only preview a viewable ${page}";
+               dijit.byId("InformationMessageDialog").show();
+               return;
+             }
+         
+             ${page}PrintPreview(${page}_id);
+           </script>
+         </button>
+         <button dojoType="dijit.form.Button" onclick="refresh_${page}()"> <img src="/static/resources/images/refresh.png"/> &nbsp;Refresh </button>
+         <div dojoType="dijit.ToolbarSeparator" label="Dropdowns"></div>&nbsp;&nbsp;&nbsp;
+         <label for="${page}Keywords">Search:</label>
+         <input dojoType="dijit.form.NumberTextBox" name="keywords" id ="${page}_keywords" required="true" maxlength="10" invalidMessage="Invalid Purchase Order Number"
+             constraints="{pattern: '##0'}" type="text" onchange="find${page}()" style="width: 150px;" />
+         <button dojoType="dijit.form.Button" id="${page}_find" onclick="find${page}()"> <img src="/static/resources/images/find.png" width="16" height="16"> Find </button>
+         <span id="${page}_search_results" style="font-weight:bold;"></span>
+       </div>
+     </td>
+   </tr>
+   <tr>
+     <td style="border: 0px;">
+       <div id="${page}_toolbar2" dojoType="dijit.Toolbar">
+         <button dojoType="dijit.form.Button" id="${page}_first" onClick="first_${page}()"> <img alt="first button" src="/static/resources/images/first.png" height="16" width="16"> First </button>
+         <button dojoType="dijit.form.Button" id="${page}_previous" onClick="previous_${page}()"> <img src="/static/resources/images/previous.png" width="16" height="16"> Previous </button>
+         <button dojoType="dijit.form.Button" id="${page}_next" onClick="next_${page}()"> <img src="/static/resources/images/next.png" width="16" height="16"> Next </button>
+         <button dojoType="dijit.form.Button" id="${page}_last" onClick="last_${page}()"> <img src="/static/resources/images/last.png" width="16" height="16"> Last </button>
+         &nbsp;&nbsp;&nbsp;
+         <label for="${page}_current_position">Navigation:</label>
+         <span id="${page}_current_position" dojoType="dijit.form.NumberTextBox" style="width: 30px;" min="0" max="100"># </span> of <span id="${page}_count">#</span>
+      </div>
+    </td>
+  </tr>
+  <tr><td valign="top" align="left"><%block name = "page_content"> </%block></td></tr>
+</table>

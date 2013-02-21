@@ -1,0 +1,11 @@
+<html>
+    <head><title>Stores</title></head>
+    <body>
+	<img src="http://192.168.56.101/pyramid.png" />
+        <form method="GET" action="stores">
+            <input name="firstname" />
+            <input name="lastname" />
+            <input type="submit" />
+        </form>
+    </body>
+</html>
