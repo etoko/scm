@@ -22,7 +22,9 @@ from scm.controllers import (
                             PermissionController,
                             )
 from scm.security import USERS
+from scm.models import User
 from scm.util import operations
+from scm.models import DBSession
 
 supplier_controller = SupplierController()
 user_controller = UserController()
@@ -56,9 +58,14 @@ def login(request):
         login = request.params["login"]
         password = request.params["password"]
         
-        if USERS.get(login) == password:
+#        if USERS.get(login) == password:
+#            headers = remember(request, login)
+#            print came_from
+#            return HTTPFound(location = came_from, headers = headers)
+        if User.check_password(login, password):
             headers = remember(request, login)
-            print came_from
+#            headers.remember(request, login)
+            request.session.flash(u'Logged in successfully')
             return HTTPFound(location = came_from, headers = headers)
 
         message = "Failed login"
@@ -66,8 +73,29 @@ def login(request):
                 came_from = came_from, login = login, password = password,)
 
 
+#@view_config(permission='view', route_name='login')
+#def login_view(request):
+#    main_view = request.route_url('main')
+#    came_from = request.params.get('came_from', main_view)
+#
+#    post_data = request.POST
+#    if 'submit' in post_data:
+#        login = post_data['login']
+#        password = post_data['password']
+#
+#        if User.check_password(login, password):
+#            headers = remember(request, login)
+#            request.session.flash(u'Logged in successfully.')
+#            return HTTPFound(location=came_from, headers=headers)
+#
+#    request.session.flash(u'Failed to login.')
+#    return HTTPFound(location=came_from)
+#
+
 @view_config(route_name = "logout")
 def logout(request):
+    request.session.flash(u'Logged out')
+    request.session.invalidate()
     headers = forget(request)
     return HTTPFound(location = request.route_url("home"), 
                      headers = headers)
