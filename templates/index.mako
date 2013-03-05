@@ -244,7 +244,13 @@
                    <div data-dojo-type="dijit.MenuSeparator"></div>
                </div>
            </div>
-           <div dojoType="dijit.form.Button"><img height="16" src="/static/images/logout.png"/> <a href="/logout">Logout</a></div>
+           <div dojoType="dijit.form.Button">
+             <script type="dojo/method" event="onClick" args="evt">
+               var str = "Logout";
+               window.location ="logout";
+             </script>
+             <img height="16" src="/static/images/logout.png"/> Logout
+           </div>
          </div>
          
        </div>
