@@ -246,7 +246,6 @@
            </div>
            <div dojoType="dijit.form.Button">
              <script type="dojo/method" event="onClick" args="evt">
-               var str = "Logout";
                window.location ="logout";
              </script>
              <img height="16" src="/static/images/logout.png"/> Logout
