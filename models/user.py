@@ -14,16 +14,28 @@ from sqlalchemy import (
     UniqueConstraint,
     )
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, backref, column_property
+from sqlalchemy.orm import ( 
+     relationship, backref, 
+     column_property,
+     synonym,
+     )
+
+from sqlalchemy.types import (
+    Unicode, UnicodeText)
 
 from zope.sqlalchemy import ZopeTransactionExtension
 from pyramid.security import (
   Allow,
   Everyone,
+  authenticated_userid,
+  remember,
+  forget,
   )
 
+import cryptacular.bcrypt
+
 from scm.util import dump_datetime
-from .meta import Base
+from .meta import Base, DBSession
 
 user_groups = Table(u"user_groups", Base.metadata,
   Column(u"user_id", Integer, ForeignKey("users.id")),
@@ -40,6 +52,10 @@ group_permissions = Table(u"group_permissions", Base.metadata,
   Column(u"permission_id", Integer, ForeignKey("permissions.id"))
   )
 
+crypt = cryptacular.bcrypt.BCRYPTPasswordManager()
+
+def hash_password(password):
+    return unicode(crypt.encode(password))
 
 class User(Base):
    
@@ -52,7 +68,7 @@ class User(Base):
     other_name = Column(u"other_name", String(50), nullable = True)
     fullname = column_property(first_name + " " + last_name)
     email_address = Column(u"email_address", String(60))
-    password = Column(u"password", String(150), nullable = False)
+#    password = Column(u"password", String(150), nullable = False)
     is_staff = Column(u"is_staff", Boolean, nullable = False)
     is_superuser = Column(u"is_superuser", Boolean, nullable = False)
     theme = Column(String(30), default = "claro", nullable = True)
@@ -68,14 +84,24 @@ class User(Base):
     groups = relationship("Group", secondary = user_groups, backref = "users")
     permissions = relationship("Permission", secondary = user_permissions,
       backref = "users")
+    _password = Column('password', Unicode(60))
+
+    def _get_password(self):
+        return self._password
+
+    def _set_password(self, password):
+        self._password = hash_password(password)
+
+    password = property(_get_password, _set_password)
+    password = synonym('_password', descriptor=password)
 
     def __init__(self, username, first_name, last_name, is_staff=False, \
-                 is_active=False, last_login = datetime.now()):
+                 is_active=False, is_superuser=False, last_login = datetime.now()):
         self.username = username
         self.first_name = first_name
         self.last_name = last_name
         self.email_address = ""
-        self.password = ""
+        self.password = "editor"
         self.is_staff = is_staff
         self.is_active = is_active
         self.last_login = last_login
@@ -135,7 +161,12 @@ class Group(Base):
 
     permissions = relationship("Permission", secondary = group_permissions,
       backref = "groups")
-  
+
+    def __init__(self, name):
+        self.name = name
+    
+    def __repr__(self):    
+        return "<Group %d %s>" % (self.id, self.name,)
     @property
     def to_dict(self):
         return {
