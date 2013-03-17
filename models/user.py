@@ -42,11 +42,6 @@ user_groups = Table(u"user_groups", Base.metadata,
   Column(u"group_id", Integer, ForeignKey("groups.id"))
   )
 
-user_permissions = Table(u"user_permissions", Base.metadata,
-  Column(u"user_id", Integer, ForeignKey("users.id")),
-  Column(u"permission_id", Integer, ForeignKey("permissions.id"))
-  )
-
 group_permissions = Table(u"group_permissions", Base.metadata,
   Column(u"group_id", Integer, ForeignKey("groups.id")),
   Column(u"permission_id", Integer, ForeignKey("permissions.id"))
@@ -82,8 +77,6 @@ class User(Base):
     position = 0
  
     groups = relationship("Group", secondary = user_groups, backref = "users")
-    permissions = relationship("Permission", secondary = user_permissions,
-      backref = "users")
     _password = Column('password', Unicode(60))
 
     def _get_password(self):
@@ -130,7 +123,6 @@ class User(Base):
           "theme":         self.theme,
           "last_login":    dump_datetime(self.last_login),
           "position":      self.position,
-          "permissions":   [permission.to_dict for permission in self.permissions]
           }
     
     @classmethod
@@ -161,6 +153,8 @@ class Group(Base):
 
     permissions = relationship("Permission", secondary = group_permissions,
       backref = "groups")
+
+    __table_args__ = (UniqueConstraint("name"),)
 
     def __init__(self, name):
         self.name = name
