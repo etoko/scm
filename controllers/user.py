@@ -29,6 +29,9 @@ from scm.controllers import ApiController
 from scm.util.security import sha256_digest
 
 class UserController(ApiController):
+    """
+    Controller for User, Group and Permission models
+    """
     def save(self, jsonified_user):
         username = None
         first_name = None
@@ -177,52 +180,69 @@ class GroupController(ApiController):
     """
     Class to handle all Group operations such as creation, read, update and Delete
     """
-    j_group_id = None
-    j_group_name = None
-    j_group_created_date = None
-    j_group_created_by = None
-    j_group_modified_by = None
-    j_group_modified_date = None
+    id = None
+    name = None
+    created_date = None
+    created_by = None
+    modified_by = None
+    modified_date = None
 
-    def create(self, j_group):
-    """
-    Create a new Group
-    """
+    def save(self, j_group):
+        """
+        Create a new Group
+        """
         try:
-            j_group_name = j_group.pop("group.name")
-            j_group_created_by = j_group.pop("group.created_by")
-            j_group_created_date = j_group.pop("group.creation_date")
-            j_group_modified_by = j_group.pop("group.modified_by")
-            j_group_modified_date = j_group.pop("group.modified_date")
+            name = j_group.pop("group.name")
+            created_by = j_group.pop("group.created_by")
+            created_date = j_group.pop("group.creation_date") \
+              if "group.creation_date" in j_group else None 
+            modified_by = j_group.pop("group.modified_by") 
+            modified_date = j_group.pop("group.modified_date") \
+              if "group.modified_date" in j_group else None
         except KeyError as err:
-            print err
+            print err, j_group
             raise KeyError()
-        Group group = Group(j_group_name)
-        group.created_by = User.get_by_username(j_group_created_by)
-        group.modified_by = User.get_by_username(j_group_modified_by)
+
+        group = Group(name)
+        group.created_by = User.get_by_username(created_by)
+        group.modified_by = User.get_by_username(modified_by)
+        print group.created_by.id
+        group.created_by = group.created_by.id
+        group.modified_by = group.modified_by.id
+        created_date = datetime.now()
+        group.created_date = created_date
+        group.modified_date = created_date
 
         with transaction.manager:
             DBSession.add(group)
+            transaction.commit()
      
     def update(self, j_group):
-    """
-    Update an existing Group
-    """
+        """
+        Update an existing Group
+        """
         try:
-            j_group_id = j_group.pop("id")
-            j_group_name = j_group.pop("name")
+            id = j_group.pop("id")
+            name = j_group.pop("name")
         except KeyError as err:
             print err
             raise KeyError 
         
         with transaction.manager:
-        Group group = DBSession.get()
+            group = DBSession.get()
 
-    def get():
-        pass
+    def get(self, **kwargs):
+        return DBSession.query(Group).all()
 
     def delete(self, j_group):
-        pass
+        try:
+            name = j_group.pop("group.name")
+            id = j_group.pop("group.id")
+        except KeyError as err:
+            print err
+            raise KeyError()
+        with transaction.manager:
+            DBSession.delete()
 
 class PermissionController(ApiController):
     permission_id = permission_name = permission_description = None
