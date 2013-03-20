@@ -5,17 +5,21 @@ __author__ = "Emmanuel Toko <http://emmanueltoko.blogspot.com>"
 from abc import ABCMeta, abstractmethod
 
 class ApiController:
+"""
+Abstract class that must be implemented by all Classes that intend to 
+manipulate the Models
+
+Abstract class contains methods to carry out CRUD - Create, Read, Update and 
+Delete operations on models
+"""
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def save(self, j_permission):
-        def _create():
+    def create():
             pass
     
-        def _update():
+    def update():
             pass
-    
-        assert False, ""
     
     @abstractmethod
     def get(self, *args, **kwargs):
