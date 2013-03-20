@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 #maintainer etoko
 #date 2012-03-15 19:22
 
@@ -32,7 +31,7 @@ class UserController(ApiController):
     """
     Controller for User, Group and Permission models
     """
-    def save(self, jsonified_user):
+    def create(self, jsonified_user):
         username = None
         first_name = None
         last_name = None
@@ -40,8 +39,7 @@ class UserController(ApiController):
         password = None
         is_active = None
         is_superuser = None
-        permissions = {}
-     
+
         try:
             username = jsonified_user["users_username"]
             first_name = jsonified_user["users_first_name"]
@@ -50,7 +48,6 @@ class UserController(ApiController):
             is_active = jsonified_user["users_active"]
             is_superuser = jsonified_user["users_superuser"]
             email_address = jsonified_user["users_email_address"]
-            permissions = jsonified_user["users_assigned_permissions"]
         except KeyError as err:
             print err
             raise KeyError()
@@ -60,7 +57,7 @@ class UserController(ApiController):
         if is_superuser == "on":
            is_superuser = True
        
-        errors = {}
+        errors = {} #list of data entry errors
     
         if username is None or first_name is None or last_name is None:
             if username is None:
@@ -187,7 +184,7 @@ class GroupController(ApiController):
     modified_by = None
     modified_date = None
 
-    def save(self, j_group):
+    def create(self, j_group):
         """
         Create a new Group
         """
@@ -206,7 +203,6 @@ class GroupController(ApiController):
         group = Group(name)
         group.created_by = User.get_by_username(created_by)
         group.modified_by = User.get_by_username(modified_by)
-        print group.created_by.id
         group.created_by = group.created_by.id
         group.modified_by = group.modified_by.id
         created_date = datetime.now()
@@ -250,11 +246,10 @@ class PermissionController(ApiController):
         p_id = kwargs.pop("permission_id", None)
         p_name = kwargs.pop("permission_name", None)
 
-    def save(self, j_permission):
-        def _create():
-            pass
+    def create(self, j_permission):
+        pass
     
-        def _update():
+    def update():
             pass
     
         print "Implementing save"
