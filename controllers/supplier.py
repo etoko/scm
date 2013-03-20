@@ -25,7 +25,7 @@ class SupplierController(ApiController):
         supplier_name_key = "supplier_name"
         user_controller = UserController()
 
-    def save(self, j_supplier):
+    def create(self, j_supplier):
         """
         Place a Supplier in the Session.
         Its state will be persisted to the database on the next flush operation.
@@ -46,16 +46,11 @@ class SupplierController(ApiController):
                 DBSession.add(supplier)
                 region_invalidate(_all, "hour")
       
-        def _update():
-            with transaction.manager:
-                supplier.modified_by = user.id
-                DBSession.merge(supplier)
-                region_invalidate(_add)
-    
-        if j_supplier[supplier_id_key] == -1:
-            _create()
-        elif j_supplier_id > -1:
-            _update()
+    def _update():
+        with transaction.manager:
+            supplier.modified_by = user.id
+            DBSession.merge(supplier)
+            region_invalidate(_add)
     
     def get(self, **kwargs):
         """
