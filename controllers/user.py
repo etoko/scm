@@ -176,6 +176,12 @@ class UserController(ApiController):
 class GroupController(ApiController):
     """
     Class to handle all Group operations such as creation, read, update and Delete
+   
+    Class contains functions: 
+    create - to create a new Group model, 
+    update - modify Group attributes,
+    get - Retrieve the Groups instances
+    delete - Delete Group instances
     """
     id = None
     name = None
@@ -250,7 +256,7 @@ class PermissionController(ApiController):
         pass
     
     def update():
-            pass
+        pass
     
         print "Implementing save"
     
