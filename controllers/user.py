@@ -189,6 +189,7 @@ class GroupController(ApiController):
     created_by = None
     modified_by = None
     modified_date = None
+    now = datetime.now()
 
     def create(self, j_group):
         """
@@ -198,7 +199,7 @@ class GroupController(ApiController):
             name = j_group.pop("group.name")
             created_by = j_group.pop("group.created_by")
             created_date = j_group.pop("group.creation_date") \
-              if "group.creation_date" in j_group else None 
+              if "group.creation_date" in j_group else self.now
             modified_by = j_group.pop("group.modified_by") 
             modified_date = j_group.pop("group.modified_date") \
               if "group.modified_date" in j_group else None
@@ -224,14 +225,22 @@ class GroupController(ApiController):
         Update an existing Group
         """
         try:
-            id = j_group.pop("id")
-            name = j_group.pop("name")
+            self.id = j_group.pop("group.id")
+            self.name = j_group.pop("group.name")
+            
         except KeyError as err:
             print err
             raise KeyError 
         
         with transaction.manager:
-            group = DBSession.get()
+            group = DBSession.query(Group).get(self.id)
+            if group is None:
+                raise ValueError("Group not found")
+            group.name = self.name
+            group.modified_by = self.modified_by
+            group.modified_date = self.now
+            DBSession.merge(group)
+            transaction.commit()
 
     def get(self, **kwargs):
         return DBSession.query(Group).all()
@@ -239,12 +248,13 @@ class GroupController(ApiController):
     def delete(self, j_group):
         try:
             name = j_group.pop("group.name")
-            id = j_group.pop("group.id")
+            self.id = j_group.pop("group.id")
         except KeyError as err:
             print err
             raise KeyError()
         with transaction.manager:
-            DBSession.delete()
+            group = DBSession.Query(Group).get(self.id)
+            DBSession.delete(group)
 
 class PermissionController(ApiController):
     permission_id = permission_name = permission_description = None
