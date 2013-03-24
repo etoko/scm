@@ -31,77 +31,83 @@ class UserController(ApiController):
     """
     Controller for User, Group and Permission models
     """
-    def create(self, jsonified_user):
-        username = None
-        first_name = None
-        last_name = None
-        email_address = None
-        password = None
-        is_active = None
-        is_superuser = None
+    username = None
+    first_name = None
+    last_name = None
+    email_address = None
+    password = None
+    is_active = None
+    is_superuser = None
 
+    def _set_attributes(j_user):
         try:
-            username = jsonified_user["users_username"]
-            first_name = jsonified_user["users_first_name"]
-            last_name = jsonified_user["users_last_name"]
-            password = jsonified_user["users_password"]
-            is_active = jsonified_user["users_active"]
-            is_superuser = jsonified_user["users_superuser"]
-            email_address = jsonified_user["users_email_address"]
+            username = j_user["users_username"]
+            first_name = j_user["users_first_name"]
+            last_name = j_user["users_last_name"]
+            password = j_user["users_password"]
+            is_active = j_user["users_active"]
+            is_superuser = j_user["users_superuser"]
+            email_address = j_user["users_email_address"]
         except KeyError as err:
             print err
             raise KeyError()
-    
-        if is_active == "on":
-           is_active = True
-        if is_superuser == "on":
-           is_superuser = True
-       
-        errors = {} #list of data entry errors
-    
-        if username is None or first_name is None or last_name is None:
-            if username is None:
-                errors["username"] = "No Username"
-            elif first_name is None:
-                errors["first_name"] = "No First Name"
-            else:
-                errors["last_name"] = "No Last Name"
-                    
-            return errors
-        if username is None:
-            raise ValueError("username was not supplied")
-        elif first_name is None:
-            raise ValueError("first name not entered")
-        elif last_name is None:
-             raise ValueError("last name not entered")
-        
-        user = User(username, first_name, last_name)
+    def _set_user(user):
         user.last_login = datetime.now()
-        user.password = password
-        user.is_active = is_active
+        user.password = self.password
+        user.is_active = self.is_active
         user.is_superuser = True
         user.is_staff = True
-        if permissions:
-            permissions = [user_manager.get(Permission, i) for i in permissions]
-            user.permissions = permissions
-       
-        if _is_valid(user):
-            try:
-                user.password = sha256_digest(password)
-            except ValueError as err:
-                print err.message
-                raise ValueError("No password supplied")
-                
-            with transaction.manager:
-                DBSession.add(user)
-        else:
-            print "Invalid user"
-    
-    def update(self, user):
-        if _is_valid(user):
-            with transaction.manager:
-                DBSession.merge(user)
-    
+        return user
+        
+    def save(self, j_user):
+        """
+        Function creates new User instances and updates existing User instances.
+        Creating or updating depends on the id of the User instance
+        """
+        _set_attributes(j_user)
+        _create() if self.id == -1 else _update()
+
+        def _create():
+            errors = {} #list of data entry errors
+
+            if self.username is None or self.first_name is None or self.last_name is None:
+                if self.username is None:
+                    errors["username"] = "No Username"
+                elif self.first_name is None:
+                    errors["first_name"] = "No First Name"
+                else:
+                    errors["last_name"] = "No Last Name"
+                return errors
+
+            if self.username is None:
+                raise ValueError("username was not supplied")
+            elif self.first_name is None:
+                raise ValueError("first name not entered")
+            elif self.last_name is None:
+                 raise ValueError("last name not entered")
+            
+            user = User(self.username, self.first_name, self.last_name)
+            user = _set_user(user) 
+            if _is_valid(user):
+                try:
+                    user.password = sha256_digest(password)
+                except ValueError as err:
+                    print err.message
+                    raise ValueError("No password supplied")
+                    
+                with transaction.manager:
+                    DBSession.add(user)
+            else:
+                print "Invalid user"
+        
+        def _update():
+            if _is_valid(j_user):
+                user = get({"user_id": self.id})
+                user = _set_user(user)
+                with transaction.manager:
+                    DBSession.merge(user)
+                    transaction.commit()
+        
     def get(self, **kwargs):
         """
         Retrieve a user or list of users depending on the arguments passed
@@ -191,56 +197,65 @@ class GroupController(ApiController):
     modified_date = None
     now = datetime.now()
 
-    def create(self, j_group):
-        """
-        Create a new Group
-        """
-        try:
-            name = j_group.pop("group.name")
-            created_by = j_group.pop("group.created_by")
-            created_date = j_group.pop("group.creation_date") \
-              if "group.creation_date" in j_group else self.now
-            modified_by = j_group.pop("group.modified_by") 
-            modified_date = j_group.pop("group.modified_date") \
-              if "group.modified_date" in j_group else None
-        except KeyError as err:
-            print err, j_group
-            raise KeyError()
-
-        group = Group(name)
-        group.created_by = User.get_by_username(created_by)
-        group.modified_by = User.get_by_username(modified_by)
-        group.created_by = group.created_by.id
-        group.modified_by = group.modified_by.id
-        created_date = datetime.now()
-        group.created_date = created_date
-        group.modified_date = created_date
-
-        with transaction.manager:
-            DBSession.add(group)
-            transaction.commit()
-     
-    def update(self, j_group):
-        """
-        Update an existing Group
-        """
-        try:
-            self.id = j_group.pop("group.id")
-            self.name = j_group.pop("group.name")
+    def save(self, j_group):
+        """  
+        Create a new Group instance or update an existing instance
+        """  
+        def _set_attributes(j_group):
             
-        except KeyError as err:
-            print err
-            raise KeyError 
-        
-        with transaction.manager:
-            group = DBSession.query(Group).get(self.id)
-            if group is None:
-                raise ValueError("Group not found")
-            group.name = self.name
-            group.modified_by = self.modified_by
-            group.modified_date = self.now
-            DBSession.merge(group)
-            transaction.commit()
+            try:
+                self.name = j_group.pop("group.name")
+                self.created_by = j_group.pop("group.created_by")
+                self.created_date = j_group.pop("group.creation_date") \
+                  if "group.creation_date" in j_group else self.now
+                self.modified_by = j_group.pop("group.modified_by") 
+                self.modified_date = j_group.pop("group.modified_date") \
+                  if "group.modified_date" in j_group else None
+            except KeyError as err:
+                print err, j_group
+                raise KeyError()
+
+        _set_attributes(j_group)
+        _create() if self.id == -1 else _update()
+
+        def _create():
+            """
+            Create a new Group
+            """
+            group = Group(name)
+            group.created_by = User.get_by_username(created_by)
+            group.modified_by = User.get_by_username(modified_by)
+            group.created_by = group.created_by.id
+            group.modified_by = group.modified_by.id
+            created_date = datetime.now()
+            group.created_date = created_date
+            group.modified_date = created_date
+
+            with transaction.manager:
+                DBSession.add(group)
+                transaction.commit()
+         
+        def _update():
+            """
+            Update an existing Group
+            """
+            try:
+                self.id = j_group.pop("group.id")
+                self.name = j_group.pop("group.name")
+                
+            except KeyError as err:
+                print err
+                raise KeyError 
+            
+            with transaction.manager:
+                group = DBSession.query(Group).get(self.id)
+                if group is None:
+                    raise ValueError("Group not found")
+                group.name = self.name
+                group.modified_by = self.modified_by
+                group.modified_date = self.now
+                DBSession.merge(group)
+                transaction.commit()
 
     def get(self, **kwargs):
         return DBSession.query(Group).filter(void = False)
@@ -263,17 +278,16 @@ class GroupController(ApiController):
 
 class PermissionController(ApiController):
     permission_id = permission_name = permission_description = None
+
     def __init__(self, **kwargs):
         p_id = kwargs.pop("permission_id", None)
         p_name = kwargs.pop("permission_name", None)
 
     def create(self, j_permission):
-        
+        pass    
     
     def update():
         pass
-    
-        print "Implementing save"
     
     @cache_region("hour", "permissions")
     def _all(self):
