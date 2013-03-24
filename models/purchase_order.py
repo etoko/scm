@@ -24,6 +24,13 @@ from pyramid.security import (
 
 from scm.util import dump_datetime
 from .meta import Base
+from scm.models import Requisition
+
+local_purchase_order_requisitions = Table(u"local_purchase_order_requisitions", 
+  Base.metadata,
+  Column(u"local_purchase_order_id", Integer, ForeignKey("local_purchase_orders.id")),
+  Column(u"requisition_id", Integer, ForeignKey("requisitions.id")),
+  )
 
 class LocalPurchaseOrder(Base):
 
@@ -40,7 +47,10 @@ class LocalPurchaseOrder(Base):
     created_date = Column(DateTime, default = datetime.now())
     modified_by = Column(ForeignKey("users.id"))
     modified_date = Column(DateTime, default = datetime.now(), onupdate = datetime.now())
+    voided = Column(Boolean, default = False)
     local_purchase_order_items = relationship("LocalPurchaseOrderItem")
+    requisitions = relationship("Requisition", \
+      secondary = local_purchase_order_requisitions, backref = "local_purchase_orders")
 
     @property
     def to_dict(self):
