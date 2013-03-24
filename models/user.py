@@ -153,6 +153,7 @@ class Group(Base):
 
     permissions = relationship("Permission", secondary = group_permissions,
       backref = "groups")
+    voided = Column("void", Boolean, default = False)
 
     __table_args__ = (UniqueConstraint("name"),)
 

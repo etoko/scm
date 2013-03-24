@@ -26,58 +26,23 @@ from pyramid.security import (
 from scm.util import dump_datetime
 from .meta import Base
 from .meta import DBSession
-from .user import User, Permission
+from .user import User, Permission, Group
+from location import Location
 from .supplier import Supplier, SupplierBranch
 from .store_issue import StoresIssueNote, StoresIssueNoteItem
 from .requisition import Requisition, RequisitionItem
 from .department import Department
+from delivery_note import DeliveryNote
 from .purchase_order import LocalPurchaseOrder
 from .goods_received import GoodsReceivedNote
-from .goods_returned import GoodsReturnedNote
+from .goods_returned import GoodsReturnedNote, GoodsReturnedNote
+from .item import Item
+from purchase_order import LocalPurchaseOrder, LocalPurchaseOrderItem
 
 class RootFactory(object):
     __acl__ = [ (Allow, Everyone, "view"), (Allow, "group:editors", "edit") ]
     def __init__(self, request):
         pass
-
-class Item(Base):
-
-    __tablename__ = "items"
-
-    id = Column(Integer, Sequence("item_id_seq"), primary_key = True)
-    name = Column(String(50))
-    unit_of_measurement = Column(String(50))
-    category = Column(ForeignKey("item_categories.id"))
-    vat_inclusive = Column(Boolean)
-    created_by = Column(ForeignKey("users.id"))
-    created_on = Column(DateTime, default = datetime.now())
-    modified_by = Column(ForeignKey("users.id"))
-    modified_on = Column(DateTime, default = datetime.now(), 
-      onupdate = datetime.now())
-    supplier = Column(Integer, ForeignKey("supplier_branches.id"))
-
-    def __init__(self, name, supplier):
-        self.name = name
-        self.supplier = supplier
-
-    def __repr__(self):
-        return "<Item: %d, %s>" % (self.id, self.name,)
-
-    @property
-    def to_dict(self):
-        return {
-            "id":                  self.id,
-            "name":                self.name,
-            "unit_of_measurement": self.unit_of_measurement,
-            "supplier":            self.supplier.to_dict,
-            "category":            self.category.to_dict,
-            "vat_inclusive":       self.vat_inclusive,
-            "created_by":          self.created_by,
-            "created_on":          self.created_on,
-            "modified_by":         self.modified_by,
-            "modified_date":       self.modified_on
-        }
-
 
 class Status(Base):
 

@@ -243,7 +243,7 @@ class GroupController(ApiController):
             transaction.commit()
 
     def get(self, **kwargs):
-        return DBSession.query(Group).all()
+        return DBSession.query(Group).filter(void = False)
 
     def delete(self, j_group):
         try:
@@ -253,8 +253,13 @@ class GroupController(ApiController):
             print err
             raise KeyError()
         with transaction.manager:
-            group = DBSession.Query(Group).get(self.id)
-            DBSession.delete(group)
+            group = DBSession.query(Group).get(self.id)
+            #Complete deletion may not be the best option. An alternative -
+            #option is to void the instance
+            #DBSession.delete(group)
+            group.void = True
+            DBSession.merge(group)
+            transaction.commit()
 
 class PermissionController(ApiController):
     permission_id = permission_name = permission_description = None
@@ -263,7 +268,7 @@ class PermissionController(ApiController):
         p_name = kwargs.pop("permission_name", None)
 
     def create(self, j_permission):
-        pass
+        
     
     def update():
         pass

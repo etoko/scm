@@ -43,8 +43,9 @@ class Requisition(Base):
     created_date = Column(DateTime, default = datetime.now())
     modified_by = Column(ForeignKey("users.id"))
     modified_date = Column(DateTime, default = datetime.now(), onupdate = datetime.now())
+    void = Column(Boolean, default = False)
     requisition_items = relationship("RequisitionItem")
-
+    
     @property
     def to_dict(self):
         return {
